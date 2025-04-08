@@ -17,7 +17,8 @@ void DrawBlock(int r, int c, int n, int highlight)
 	if(highlight) setfillcolor(GRAY);
 	else setfillcolor(LIGHTGRAY);
 	ege_fillrect(c*sideLength+sideLength/16, r*sideLength+sideLength/16, sideLength*7/8, sideLength*7/8);
-	if(n < 10) xyprintf(c*sideLength+sideLength*5/16, r*sideLength+yOfChar, "%d", n);
+	if(n <= 0);
+	else if(n < 10) xyprintf(c*sideLength+sideLength*5/16, r*sideLength+yOfChar, "%d", n);
 	else if(n < 100) xyprintf(c*sideLength+sideLength/8, r*sideLength+yOfChar, "%d", n);
 	else xyprintf(c*sideLength-sideLength/16, r*sideLength+yOfChar, "%d", n);
 }
@@ -26,7 +27,7 @@ void DrawSelection(int rm, int cm)
 {
 	int r, c;
 	cleardevice();
-	for(r=0; r<3; r++)
+	for(r=0; r<5; r++)
 	{
 		for(c=2; c<10; c++)
 		{
@@ -34,9 +35,11 @@ void DrawSelection(int rm, int cm)
 		}
 	}
 	setfont(sideLength*5/8, 0, "Consolas");
-	xyprintf(sideLength*3/8+sideLength/16, 0*sideLength+sideLength*3/16, "Easy");
-	xyprintf(sideLength/16+sideLength/16, 1*sideLength+sideLength*3/16, "Normal");
-	xyprintf(sideLength*3/8+sideLength/16, 2*sideLength+sideLength*3/16, "Hard");
+	xyprintf(sideLength/16+sideLength/16, 0*sideLength+sideLength*3/16, "Lowest");
+	xyprintf(sideLength*3/8+sideLength/16, 1*sideLength+sideLength*3/16, "Easy");
+	xyprintf(sideLength/16+sideLength/16, 2*sideLength+sideLength*3/16, "Normal");
+	xyprintf(sideLength*3/8+sideLength/16, 3*sideLength+sideLength*3/16, "Hard");
+	xyprintf(sideLength*7/32+sideLength/16, 4*sideLength+sideLength*3/16, "Blind");
 	setfont(sideLength*3/4, 0, "Consolas");
 }
 
@@ -93,7 +96,7 @@ void DrawBoard(int rm, int cm, int mstime, int right, int wrong)
 		{
 			if(hardMode == 0)
 			{
-				if(board[r][c] == right+1 || right == difficulty*difficulty)
+				if((board[r][c] >= right+1 && board[r][c] <= right+3) || right == difficulty*difficulty)
 				{
 					DrawBlock(r+1, c, board[r][c], (r == rm && c == cm));
 				}
@@ -103,6 +106,17 @@ void DrawBoard(int rm, int cm, int mstime, int right, int wrong)
 				if(board[r][c] >= right+1 || right == difficulty*difficulty)
 				{
 					DrawBlock(r+1, c, board[r][c], (r == rm && c == cm));
+				}
+			}
+			else if(hardMode == 4)
+			{
+				if(right == 0 || right == difficulty*difficulty)
+				{
+					DrawBlock(r+1, c, board[r][c], (r == rm && c == cm));
+				}
+				else
+				{
+					DrawBlock(r+1, c, 0, (r == rm && c == cm));
 				}
 			}
 			else
@@ -173,7 +187,7 @@ void InitWindow(int mode)
 		else sideLength = 48;
 		setcaption("Schulte Grid");
 		SetProcessDPIAware();
-		initgraph(10*sideLength, 3*sideLength, INIT_RENDERMANUAL);
+		initgraph(10*sideLength, 5*sideLength, INIT_RENDERMANUAL);
 		setbkcolor(WHITE);
 		setfont(heightOfChar, 0, "Consolas");
 		setbkmode(TRANSPARENT);
@@ -223,7 +237,6 @@ int IsMousePosOutside()//鼠标在窗口边界外
 void InitBoard()
 {
 	int r, c, n;
-	srand(time(0));
 	for(r=0; r<difficulty; r++)
 	{
 		for(c=0; c<difficulty; c++)
@@ -268,15 +281,15 @@ int main()
 			c = mouseMsg.x / sideLength;
 			if(mouseMsg.is_up())//选择难度
 			{
-				if(r >= 0 && r <= 2) hardMode = r;
+				if(r >= 0 && r <= 4) hardMode = r;
 				else hardMode = 2;
-				if(c >= 2 && c < 10) difficulty = c+1;
+				if(c >= 0 && c < 10) difficulty = c+1;
 			}
 			if(mouseMsg.is_wheel() && keystate(key_control))//调整显示大小
 			{
 				if(mouseMsg.wheel > 0) Resize('+');
 				else Resize('-');
-				resizewindow(10*sideLength, 3*sideLength);
+				resizewindow(10*sideLength, 5*sideLength);
 				setfont(heightOfChar, 0, "Consolas");//更新字体大小
 				DrawSelection(r, c);
 			}
@@ -307,6 +320,7 @@ int main()
 		delay_ms(50);
 	}
 	/*游戏*/
+	srand(time(0));
 	InitBoard();
 	InitWindow(1);
 	r = -1;
@@ -330,9 +344,13 @@ int main()
 			c = mouseMsg.x / sideLength;
 			if(mouseMsg.is_up())
 			{
-				if(rightNumber <= difficulty*difficulty)
+				if(rightNumber <= difficulty*difficulty && r>=0 && r<difficulty && c>=0 && c<difficulty)
 				{
-					if(board[r][c] == rightNumber) rightNumber++;
+					if(board[r][c] == rightNumber)
+					{
+						rightNumber++;
+						if(hardMode == 3 && rightNumber-1 != difficulty*difficulty) InitBoard();
+					}
 					else countWrong++;
 				}
 			}
@@ -353,6 +371,7 @@ int main()
 			{
 				if(keyMsg.key == 'R')
 				{
+					srand(time(0));
 					InitBoard();
 					DrawBoard(-1, -1, t1-t0, rightNumber-1, countWrong);
 					rightNumber = 1;
@@ -366,3 +385,12 @@ int main()
 	closegraph();
 	return 0;
 }
+
+/*--------------------------------
+更新日志：
+SchulteGrid 0.2
+——新增 在对应位置点击可进入1阶和2阶难度
+——新增 显示3个方块的Lowest、打乱的Hard、盲玩的Blind难度
+——优化 旧Easy移除，旧Normal为新Easy，旧Hard为新Normal
+——优化 在非数字位置点击不再会增加错误数
+-------------------------------*/
