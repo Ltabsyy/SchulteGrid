@@ -5,7 +5,7 @@
 
 int difficulty = 5;
 int sideLength = 96;
-int board[10][10];
+int** board;
 int hardMode = 2;
 
 #define heightOfChar sideLength*3/4
@@ -27,7 +27,7 @@ void DrawSelection(int rm, int cm)
 {
 	int r, c;
 	cleardevice();
-	for(r=0; r<5; r++)
+	for(r=0; r<7; r++)
 	{
 		for(c=2; c<10; c++)
 		{
@@ -38,8 +38,10 @@ void DrawSelection(int rm, int cm)
 	xyprintf(sideLength/16+sideLength/16, 0*sideLength+sideLength*3/16, "Lowest");
 	xyprintf(sideLength*3/8+sideLength/16, 1*sideLength+sideLength*3/16, "Easy");
 	xyprintf(sideLength/16+sideLength/16, 2*sideLength+sideLength*3/16, "Normal");
-	xyprintf(sideLength*3/8+sideLength/16, 3*sideLength+sideLength*3/16, "Hard");
-	xyprintf(sideLength*7/32+sideLength/16, 4*sideLength+sideLength*3/16, "Blind");
+	xyprintf(sideLength*3/8+sideLength/16, 3*sideLength+sideLength*3/16, "Hard-");//减号不计算占位
+	xyprintf(sideLength*3/8+sideLength/16, 4*sideLength+sideLength*3/16, "Hard");
+	xyprintf(sideLength*7/32+sideLength/16, 5*sideLength+sideLength*3/16, "Blind-");
+	xyprintf(sideLength*7/32+sideLength/16, 6*sideLength+sideLength*3/16, "Blind");
 	setfont(sideLength*3/4, 0, "Consolas");
 }
 
@@ -94,21 +96,32 @@ void DrawBoard(int rm, int cm, int mstime, int right, int wrong)
 	{
 		for(c=0; c<difficulty; c++)
 		{
-			if(hardMode == 0)
+			if(hardMode == 0)//Lowest最低
 			{
 				if((board[r][c] >= right+1 && board[r][c] <= right+3) || right == difficulty*difficulty)
 				{
 					DrawBlock(r+1, c, board[r][c], (r == rm && c == cm));
 				}
 			}
-			else if(hardMode == 1)
+			else if(hardMode == 1 || hardMode == 3)//Easy简单/Hard-简单打乱
 			{
 				if(board[r][c] >= right+1 || right == difficulty*difficulty)
 				{
 					DrawBlock(r+1, c, board[r][c], (r == rm && c == cm));
 				}
 			}
-			else if(hardMode == 4)
+			else if(hardMode == 5)//Blind-简单盲玩
+			{
+				if(right == 0 || right == difficulty*difficulty)
+				{
+					DrawBlock(r+1, c, board[r][c], (r == rm && c == cm));
+				}
+				else if(board[r][c] >= right+1)
+				{
+					DrawBlock(r+1, c, 0, (r == rm && c == cm));
+				}
+			}
+			else if(hardMode == 6)//Blind盲玩
 			{
 				if(right == 0 || right == difficulty*difficulty)
 				{
@@ -119,24 +132,12 @@ void DrawBoard(int rm, int cm, int mstime, int right, int wrong)
 					DrawBlock(r+1, c, 0, (r == rm && c == cm));
 				}
 			}
-			else
+			else//Normal普通/Hard打乱
 			{
 				DrawBlock(r+1, c, board[r][c], (r == rm && c == cm));
 				//DrawBlock(r+1, c, r*difficulty+c+1, (r == rm && c == cm));
 			}
 		}
-	}
-	//用时
-	DrawClock(sideLength/2, sideLength/2, sideLength*10/32);
-	setcolor(BLACK);
-	if(right == difficulty*difficulty)
-	{
-		if(mstime < 10*1000) xyprintf(sideLength, yOfChar, "%.1f", (float)mstime/1000);
-		else xyprintf(sideLength, yOfChar, "%d", (mstime+500)/1000);
-	}
-	else
-	{
-		xyprintf(sideLength, yOfChar, "%d", mstime/1000);
 	}
 	//正确进度
 	if(right == difficulty*difficulty)
@@ -150,18 +151,30 @@ void DrawBoard(int rm, int cm, int mstime, int right, int wrong)
 		setfillcolor(GREEN);
 	}
 	setlinewidth(sideLength/16);
-	ege_line(2*sideLength+sideLength/4, sideLength/2, 2*sideLength+sideLength/2, sideLength*3/4);
-	ege_line(2*sideLength+sideLength/2, sideLength*3/4, 2*sideLength+sideLength*3/4, sideLength/4);
-	ege_fillcircle(2*sideLength+sideLength/2, sideLength*3/4, sideLength/32);
+	ege_line(0*sideLength+sideLength/4, sideLength/2, 0*sideLength+sideLength/2, sideLength*3/4);
+	ege_line(0*sideLength+sideLength/2, sideLength*3/4, 0*sideLength+sideLength*3/4, sideLength/4);
+	ege_fillcircle(0*sideLength+sideLength/2, sideLength*3/4, sideLength/32);
 	setcolor(BLACK);
-	xyprintf(3*sideLength, yOfChar, "%d", right);
+	xyprintf(1*sideLength, yOfChar, "%d", right);
 	//错误数
 	setcolor(RED);
 	setlinewidth(sideLength/16);
-	ege_line(4*sideLength+sideLength/4, sideLength/4, 4*sideLength+sideLength*3/4, sideLength*3/4);
-	ege_line(4*sideLength+sideLength/4, sideLength*3/4, 4*sideLength+sideLength*3/4, sideLength/4);
+	ege_line(2*sideLength+sideLength/4, sideLength/4, 2*sideLength+sideLength*3/4, sideLength*3/4);
+	ege_line(2*sideLength+sideLength/4, sideLength*3/4, 2*sideLength+sideLength*3/4, sideLength/4);
 	setcolor(BLACK);
-	xyprintf(5*sideLength, yOfChar, "%d", wrong);
+	xyprintf(3*sideLength, yOfChar, "%d", wrong);
+	//用时
+	DrawClock(4*sideLength+sideLength/2, sideLength/2, sideLength*10/32);
+	setcolor(BLACK);
+	if(right == difficulty*difficulty)
+	{
+		if(mstime < 100*1000) xyprintf(5*sideLength, yOfChar, "%.1f", (float)mstime/1000);
+		else xyprintf(5*sideLength, yOfChar, "%d", (mstime+500)/1000);
+	}
+	else
+	{
+		xyprintf(5*sideLength, yOfChar, "%d", mstime/1000);
+	}
 }
 
 void InitWindow(int mode)
@@ -187,7 +200,7 @@ void InitWindow(int mode)
 		else sideLength = 48;
 		setcaption("Schulte Grid");
 		SetProcessDPIAware();
-		initgraph(10*sideLength, 5*sideLength, INIT_RENDERMANUAL);
+		initgraph(10*sideLength, 7*sideLength, INIT_RENDERMANUAL);
 		setbkcolor(WHITE);
 		setfont(heightOfChar, 0, "Consolas");
 		setbkmode(TRANSPARENT);
@@ -200,7 +213,7 @@ void InitWindow(int mode)
 			sideLength -= 8;
 		}
 		if(sideLength < 24) sideLength = 24;
-		if(difficulty < 6) resizewindow(6*sideLength, (difficulty+1)*sideLength);
+		if(difficulty < 7) resizewindow(6*sideLength+sideLength/2, (difficulty+1)*sideLength);
 		else resizewindow(difficulty*sideLength, (difficulty+1)*sideLength);
 		setfont(heightOfChar, 0, "Consolas");
 	}
@@ -281,15 +294,19 @@ int main()
 			c = mouseMsg.x / sideLength;
 			if(mouseMsg.is_up())//选择难度
 			{
-				if(r >= 0 && r <= 4) hardMode = r;
+				if(r >= 0 && r <= 6) hardMode = r;
 				else hardMode = 2;
-				if(c >= 0 && c < 10) difficulty = c+1;
+				if(c >= 0)
+				{
+					if(c < 15) difficulty = c+1;
+					else difficulty = 15;
+				}
 			}
 			if(mouseMsg.is_wheel() && keystate(key_control))//调整显示大小
 			{
 				if(mouseMsg.wheel > 0) Resize('+');
 				else Resize('-');
-				resizewindow(10*sideLength, 5*sideLength);
+				resizewindow(10*sideLength, 7*sideLength);
 				setfont(heightOfChar, 0, "Consolas");//更新字体大小
 				DrawSelection(r, c);
 			}
@@ -320,6 +337,11 @@ int main()
 		delay_ms(50);
 	}
 	/*游戏*/
+	board =(int**) calloc(difficulty, sizeof(int*));
+	for(r=0; r<difficulty; r++)
+	{
+		board[r] = (int*) calloc(difficulty, sizeof(int));
+	}
 	srand(time(0));
 	InitBoard();
 	InitWindow(1);
@@ -349,7 +371,7 @@ int main()
 					if(board[r][c] == rightNumber)
 					{
 						rightNumber++;
-						if(hardMode == 3 && rightNumber-1 != difficulty*difficulty) InitBoard();
+						if((hardMode == 3 || hardMode == 4) && rightNumber-1 != difficulty*difficulty) InitBoard();
 					}
 					else countWrong++;
 				}
@@ -358,7 +380,7 @@ int main()
 			{
 				if(mouseMsg.wheel > 0) Resize('+');
 				else Resize('-');
-				if(difficulty < 6) resizewindow(6*sideLength, (difficulty+1)*sideLength);
+				if(difficulty < 7) resizewindow(6*sideLength+sideLength/2, (difficulty+1)*sideLength);
 				else resizewindow(difficulty*sideLength, (difficulty+1)*sideLength);
 				setfont(heightOfChar, 0, "Consolas");//更新字体大小
 				DrawBoard(r, c, t1-t0, rightNumber-1, countWrong);
@@ -393,4 +415,10 @@ SchulteGrid 0.2
 ——新增 显示3个方块的Lowest、打乱的Hard、盲玩的Blind难度
 ——优化 旧Easy移除，旧Normal为新Easy，旧Hard为新Normal
 ——优化 在非数字位置点击不再会增加错误数
+SchulteGrid 0.3
+——新增 简单打乱的Hard-、简单盲玩的Blind-难度
+——优化 动态内存分配
+——优化 设置难度鼠标在右界外松开可设置为11-15阶难度
+——优化 用时移至最右显示
+——优化 用时小数显示扩展至百秒内
 -------------------------------*/
