@@ -14,8 +14,7 @@ int hardMode = 2;
 void DrawBlock(int r, int c, int n, int highlight)
 {
 	setcolor(BLACK);
-	if(highlight) setfillcolor(GRAY);
-	else setfillcolor(LIGHTGRAY);
+	setfillcolor(highlight ? GRAY : LIGHTGRAY);
 	ege_fillrect(c*sideLength+sideLength/16, r*sideLength+sideLength/16, sideLength*7/8, sideLength*7/8);
 	if(n <= 0);
 	else if(n < 10) xyprintf(c*sideLength+sideLength*5/16, r*sideLength+yOfChar, "%d", n);
@@ -140,25 +139,15 @@ void DrawBoard(int rm, int cm, int mstime, int right, int wrong)
 		}
 	}
 	//正确进度
-	if(right == difficulty*difficulty)
-	{
-		setcolor(LIME);
-		setfillcolor(LIME);
-	}
-	else
-	{
-		setcolor(GREEN);
-		setfillcolor(GREEN);
-	}
+	setcolor(right == difficulty*difficulty ? LIME : GREEN);
 	setlinewidth(sideLength/16);
 	ege_line(0*sideLength+sideLength/4, sideLength/2, 0*sideLength+sideLength/2, sideLength*3/4);
 	ege_line(0*sideLength+sideLength/2, sideLength*3/4, 0*sideLength+sideLength*3/4, sideLength/4);
-	ege_fillcircle(0*sideLength+sideLength/2, sideLength*3/4, sideLength/32);
 	setcolor(BLACK);
 	xyprintf(1*sideLength, yOfChar, "%d", right);
 	//错误数
 	setcolor(RED);
-	setlinewidth(sideLength/16);
+	//setlinewidth(sideLength/16);
 	ege_line(2*sideLength+sideLength/4, sideLength/4, 2*sideLength+sideLength*3/4, sideLength*3/4);
 	ege_line(2*sideLength+sideLength/4, sideLength*3/4, 2*sideLength+sideLength*3/4, sideLength/4);
 	setcolor(BLACK);
@@ -204,6 +193,7 @@ void InitWindow(int mode)
 		setbkcolor(WHITE);
 		setfont(heightOfChar, 0, "Consolas");
 		setbkmode(TRANSPARENT);
+		setlinecap(LINECAP_ROUND);//设置圆形线帽
 		ege_enable_aa(true);
 	}
 	else
@@ -294,18 +284,12 @@ int main()
 			c = mouseMsg.x / sideLength;
 			if(mouseMsg.is_up())//选择难度
 			{
-				if(r >= 0 && r <= 6) hardMode = r;
-				else hardMode = 2;
-				if(c >= 0)
-				{
-					if(c < 15) difficulty = c+1;
-					else difficulty = 15;
-				}
+				hardMode = (r >= 0 && r <= 6) ? r : 2;
+				if(c >= 0) difficulty = (c < 15) ? c+1 : 15;
 			}
 			if(mouseMsg.is_wheel() && keystate(key_control))//调整显示大小
 			{
-				if(mouseMsg.wheel > 0) Resize('+');
-				else Resize('-');
+				Resize(mouseMsg.wheel > 0 ? '+' : '-');
 				resizewindow(10*sideLength, 7*sideLength);
 				setfont(heightOfChar, 0, "Consolas");//更新字体大小
 				DrawSelection(r, c);
@@ -378,8 +362,7 @@ int main()
 			}
 			if(mouseMsg.is_wheel() && keystate(key_control))//调整显示大小
 			{
-				if(mouseMsg.wheel > 0) Resize('+');
-				else Resize('-');
+				Resize(mouseMsg.wheel > 0 ? '+' : '-');
 				if(difficulty < 7) resizewindow(6*sideLength+sideLength/2, (difficulty+1)*sideLength);
 				else resizewindow(difficulty*sideLength, (difficulty+1)*sideLength);
 				setfont(heightOfChar, 0, "Consolas");//更新字体大小
@@ -421,4 +404,7 @@ SchulteGrid 0.3
 ——优化 设置难度鼠标在右界外松开可设置为11-15阶难度
 ——优化 用时移至最右显示
 ——优化 用时小数显示扩展至百秒内
+SchulteGrid 0.4
+——优化 使用圆形线帽
+——优化 通过三目运算符简化代码
 -------------------------------*/
