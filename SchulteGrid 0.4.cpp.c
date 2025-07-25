@@ -41,7 +41,7 @@ void DrawSelection(int rm, int cm)
 	xyprintf(sideLength*3/8+sideLength/16, 4*sideLength+sideLength*3/16, "Hard");
 	xyprintf(sideLength*7/32+sideLength/16, 5*sideLength+sideLength*3/16, "Blind-");
 	xyprintf(sideLength*7/32+sideLength/16, 6*sideLength+sideLength*3/16, "Blind");
-	setfont(sideLength*3/4, 0, "Consolas");
+	setfont(heightOfChar, 0, "Consolas");
 }
 
 void DrawLineA(int x0, int y0, int r, int angle)//绘制时钟指针
@@ -198,7 +198,7 @@ void InitWindow(int mode)
 	}
 	else
 	{
-		while(difficulty*sideLength > screenWidth || (difficulty+2)*sideLength > screenHeight)
+		while(difficulty*sideLength > screenWidth || (difficulty+1)*sideLength > screenHeight*10/11)
 		{
 			sideLength -= 8;
 		}
@@ -407,4 +407,5 @@ SchulteGrid 0.3
 SchulteGrid 0.4
 ——优化 使用圆形线帽
 ——优化 通过三目运算符简化代码
+——优化 默认显示大小
 -------------------------------*/
